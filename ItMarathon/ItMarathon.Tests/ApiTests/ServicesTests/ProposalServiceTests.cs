@@ -27,8 +27,9 @@ public class ProposalServiceTests
         // Arrange
         var httpContext = new DefaultHttpContext();
         var request = httpContext.Request;
+
         var model = new EdmModel();
-        var entityType = model.AddEntityType("Namespace", "Proposal", null);
+        model.AddEntityType("Namespace", "Proposal", null);
         var queryContext = new ODataQueryContext(model, typeof(Proposal), new ODataPath());
         var queryOptions = new ODataQueryOptions<Proposal>(queryContext, request);
 

@@ -3,6 +3,7 @@ using ItMarathon.Api.Common.Contracts;
 using ItMarathon.Api.Dtos.PropertyDtos;
 using ItMarathon.Api.Dtos.ProposalDtos;
 using ItMarathon.Api.Utilities;
+using ItMarathon.Dal.Common;
 using ItMarathon.Dal.Common.Contracts;
 using ItMarathon.Dal.Entities;
 using ItMarathon.Dal.Enums;
@@ -24,13 +25,15 @@ public class ProposalService(IUnitOfWork unitOfWork, IMapper mapper, IAzureBlobS
     private static readonly IEdmModel _edmModel = ODataUtility.GetEdmModel();
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<ProposalDto>> GetAllProposalsAsync(HttpRequest request)
+    public async Task<DataPage<ProposalDto>> GetAllProposalsAsync(HttpRequest request)
     {
         var odataQueryContext = new ODataQueryContext(_edmModel, typeof(Proposal), new ODataPath());
         var queryOptions = new ODataQueryOptions<Proposal>(odataQueryContext, request);
 
-        var proposals = await unitOfWork.Proposals.GetProposalsAsync(false, queryOptions);
-        return mapper.Map<IEnumerable<ProposalDto>>(proposals);
+        var (proposals, totalCount) = await unitOfWork.Proposals.GetProposalsAsync(false, queryOptions);
+        var proposalDtos = mapper.Map<IEnumerable<ProposalDto>>(proposals);
+
+        return new DataPage<ProposalDto>(proposalDtos, totalCount);
     }
 
     /// <inheritdoc/>

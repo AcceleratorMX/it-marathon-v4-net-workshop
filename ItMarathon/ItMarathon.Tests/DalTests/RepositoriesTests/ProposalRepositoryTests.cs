@@ -31,8 +31,8 @@ public class ProposalRepositoryTests
         var result = await repository.GetProposalsAsync(false, queryOptions);
 
         // Assert
-        result.Should().NotBeNullOrEmpty();
-        result.Count().Should().Be(initialCount);
+        result.Proposals.Should().NotBeEmpty();
+        result.TotalCount.Should().Be(initialCount);
     }
 
     [Theory]

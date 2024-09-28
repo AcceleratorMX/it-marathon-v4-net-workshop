@@ -1,4 +1,5 @@
-﻿using ItMarathon.Dal.Common.Contracts;
+﻿
+using ItMarathon.Dal.Common.Contracts;
 using ItMarathon.Dal.Context;
 using ItMarathon.Dal.Entities;
 using Microsoft.AspNetCore.OData.Query;
@@ -9,13 +10,23 @@ namespace ItMarathon.Dal.Repositories;
 public class ProposalRepository(ApplicationDbContext repositoryContext) :
     RepositoryBase<Proposal>(repositoryContext), IProposalRepository
 {
-    public async Task<IEnumerable<Proposal>> GetProposalsAsync(bool trackChanges, ODataQueryOptions queryOptions)
+    public async Task<(IEnumerable<Proposal> Proposals, long TotalCount)> GetProposalsAsync(bool trackChanges, ODataQueryOptions queryOptions)
     {
         IQueryable<Proposal> query = FindAll(trackChanges);
 
+        if (queryOptions?.Filter != null)
+        {
+            query = (IQueryable<Proposal>)queryOptions.Filter.ApplyTo(query, new ODataQuerySettings());
+        }
+
+        long totalCount = await query.LongCountAsync();
+
         if (queryOptions != null)
         {
-            query = (IQueryable<Proposal>)queryOptions.ApplyTo(query);
+            query = (IQueryable<Proposal>)queryOptions.ApplyTo(query, new ODataQuerySettings()
+            {
+                HandleNullPropagation = HandleNullPropagationOption.False
+            });
         }
 
         query = query
@@ -27,7 +38,9 @@ public class ProposalRepository(ApplicationDbContext repositoryContext) :
                 .ThenInclude(properties => properties.PredefinedValue)
                     .ThenInclude(prop => prop!.ParentPropertyValue);
 
-        return await query.ToListAsync();
+        var proposals = await query.ToListAsync();
+
+        return (proposals, totalCount);
     }
 
     public async Task<Proposal?> GetProposalAsync(long proposalId, bool trackChanges)
