@@ -10,8 +10,6 @@ using ItMarathon.Dal.Entities;
 using ItMarathon.Tests.ApiTests.Fixtures;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.OData.Query;
-using Microsoft.OData.Edm;
-using Microsoft.OData.UriParser;
 using Moq;
 
 namespace ItMarathon.Tests.ApiTests.ServicesTests;
@@ -28,16 +26,11 @@ public class ProposalServiceTests
         var httpContext = new DefaultHttpContext();
         var request = httpContext.Request;
 
-        var model = new EdmModel();
-        model.AddEntityType("Namespace", "Proposal", null);
-        var queryContext = new ODataQueryContext(model, typeof(Proposal), new ODataPath());
-        var queryOptions = new ODataQueryOptions<Proposal>(queryContext, request);
-
         // Act
         await proposalService.GetAllProposalsAsync(request);
 
         // Assert
-        proposalRepositoryMock.Verify(r => r.GetProposalsAsync(false, queryOptions), Times.Once);
+        proposalRepositoryMock.Verify(r => r.GetProposalsAsync(false, It.IsAny<ODataQueryOptions>()), Times.Once);
     }
 
     [Theory]

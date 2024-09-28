@@ -3,11 +3,7 @@ using ItMarathon.Dal.Context;
 using ItMarathon.Dal.Entities;
 using ItMarathon.Dal.Repositories;
 using ItMarathon.Tests.DalTests.Fixtures;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OData.Edm;
-using Microsoft.OData.UriParser;
 
 namespace ItMarathon.Tests.DalTests.RepositoriesTests;
 
@@ -15,24 +11,19 @@ public class ProposalRepositoryTests
 {
     [Theory]
     [ProposalFixture]
-    public async Task GetAllProposalsAsync_ShouldReturnAllProposals(ApplicationDbContext context)
+    public async Task GetProposalsAsync_ShouldReturnAllProposals(ApplicationDbContext context)
     {
         // Arrange
         var repository = new ProposalRepository(context);
         var initialCount = await context.Proposals.CountAsync();
 
-        var model = new EdmModel();
-        model.AddEntityType("Namespace", "Proposal", null);
-        var queryContext = new ODataQueryContext(model, typeof(Proposal), new ODataPath());
-        var request = new DefaultHttpContext().Request;
-        var queryOptions = new ODataQueryOptions<Proposal>(queryContext, request);
-
         // Act
-        var result = await repository.GetProposalsAsync(false, queryOptions);
+        var (proposals, totalCount) = await repository.GetProposalsAsync(false, null);
 
         // Assert
-        result.Proposals.Should().NotBeEmpty();
-        result.TotalCount.Should().Be(initialCount);
+        proposals.Should().NotBeNullOrEmpty();
+        proposals.Should().HaveCount(initialCount);
+        totalCount.Should().Be(initialCount);
     }
 
     [Theory]
